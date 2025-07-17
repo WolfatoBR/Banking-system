@@ -3,20 +3,20 @@ import textwrap
 def main():
     LIMIT_WITHDRAW = 3
     AGENC = "0001"
-    
+
     balance = 0
     limit = 500
     statement = ""
     number_withdraw = 0
     users = []
-    acconts = []
-    
+    acconts= []
+
     while True:
         option = menu()
-        
+
         if option == "d":
-            value = float(input("Informe o valor do deposito: "))
-            balance, statement = deposit(balance, value, statement)
+           value = float(input("Informe o valor do deposito: "))
+           balance, statement = deposit(balance, value, statement)
         
         elif option == "s":
             value = float(input("Informe o valor do saque: "))
@@ -26,7 +26,7 @@ def main():
                                           limit=limit,
                                           number_withdraw=number_withdraw,
                                           limit_withdraw=LIMIT_WITHDRAW)
-
+        
         elif option == "e":
             statement_accont(balance, statement=statement)
         
@@ -49,71 +49,77 @@ def main():
         else:
             print("Operação invalida, por favor selecione novamente a opção desejada.")
 
-
 def menu():
     menu = """\n
-    =========MENU=========
-    [d]\tDeposito
+    ==========MENU==========
+    [d]\tDepositar
     [s]\tSacar
     [e]\tExtrato
     [nc]\tNova Conta
     [lc]\tListar Contas
     [nu]\tNovo Usuario
     [q]\tSair
-    =>"""
+    => """
+            #textwrap => serve para remover os recuos
     return input(textwrap.dedent(menu))
 
+# Funcao Deposito : Saldo, valor, extrato
 def deposit(balance, value, statement, /):
     if value > 0:
         balance += value
         statement += f"Deposito: R$ {value:.2f}\n"
     else:
-        print("A operação falhou! O valor inserido é invalido.")
-        
+        print("A operação de Deposito falhou! O valor informado é invalido.")
+    
     return balance, statement
 
+
+# Funcao Sacar : Saldo, valor, extrato, limite, numero_saques, limite_saque
 def withdraw(*, balance, value, statement, limit, number_withdraw, limit_withdraw):
     
     exceeded_balance = value > balance
     
     exceeded_limit = value > limit
-    
+
     exceeded_withdraw = number_withdraw >= limit_withdraw
-    
+
     if exceeded_balance:
         print("Operação falhou! Você não possui saldo suficiente.")
     elif exceeded_limit:
         print("Operação falhou! O valor do saque ultrapassa o limite disponivel.")
-    elif value > 0:
+    elif exceeded_withdraw:
+        print("Operação falhou! Número maximo de saques excedidos.")
+    
+    elif value>0:
         balance -= value
-        statement += f"Saque: R${value:.2f}\n"
-        number_withdraw +=1
+        statement += f"Saque: R$ {value:.2f}\n"
+        number_withdraw+=1
     else:
-        print("Operação falhou! O valor inserido é invalido.")
-        
+        print("Operação falhou! O valor informado é invalido.")
+    
     return balance, statement
 
-def statement_accont(balance, /, *, statement):
+def statement_accont(balance,/, *, statement):
     print("\n========== Extrato =========")
-    print("Não foram realizadas movimentações" if not statement else statement)
+    print("Não foram realizadas movimentações." if not statement else statement)
     print(f"\n\t Saldo: R$ {balance:.2f}")
     print("=========================")
-    
+
 def new_user(users):
     cpf = input("Informe o numero de CPF (apenas numeros).")
     user = filter_user(cpf, users)
-    
+
     if user:
-        print(f"\n@@@ Já existe usuario com este CPF! {cpf} @@@")
+        print(f"\n@@@ Já existe usuario em esse CPF! {cpf} @@@")
         return
     
-    name = input('Informe o seu nome Completo: ')
-    date_of_birth = input("Infome a sua data de nascimento (dd-mm-aaaa): ")
-    addres = input("Informe o seu endereço (logradouro, numero - bairro - cidade/sigla estado): ")
-    
-    users.append({"nome": name, "data_nasciemtno": date_of_birth, "cpf": cpf, "endereço": addres})
-    
-    print("=== Usuario cadastrado com sucesso ===")
+    name = input("Infrome o nome Completo: ")
+    date_of_birth = input("Informe a data de nascimento (dd-mm-aaaa): ")
+    address = input("Informe o endereço (logradouro, numero - bairro - cidade/sigla estado): ")
+
+    users.append({"nome": name, "data_nascimento": date_of_birth, "cpf": cpf, "endereco": address})
+
+    print("=== Usuario com sucesso ===")
 
 def filter_user(cpf, users):
     users_filters = [user for user in users if user["cpf"] == cpf]
