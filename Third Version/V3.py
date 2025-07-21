@@ -3,6 +3,9 @@ from abc import ABC, abstractclassmethod, abstractproperty
 from datetime import datetime
 
 
+# É interessante você separar cada classe em um arquivo diferente.
+# Isso facilita o reuso em outros sistemas, além de não sobrecarregar o processo com classes
+# que podem ser desnecessárias no contexto.
 class Client:
     def __init__(self, address):
         self.address = address
@@ -90,6 +93,10 @@ class CheckingAccount(Account):
         self._withdraw_limit = withdraw_limit
 
     def withdraw(self, value):
+        # Você precisa contar as transações todas as vezes que o cliente solicitar uma nova?
+        # Pense o quanto de overload você pode causar em um banco com 10 milhões de clientes e uma média
+        # de 50 transações por intervalo de tempo... Cada saque teria que ler 500 milhões de transações antes
+        # de fazer uma nova... Pense numa estratégia que melhore esse gargalo.
         withdraw_count = len(
             [transaction for transaction in self.history.transactions if transaction["type"] == Withdraw.__name__]
         )
@@ -188,8 +195,10 @@ def menu():
     => """
     return input(textwrap.dedent(menu))
 
-
 def filter_client(cpf, clients):
+    # CPF é um valor numérico. Se você pensar no conceito de hash ou dict,
+    # essa operação não precisa ser feita, já que o próprio CPF pode ser o indice da
+    # lista de clientes
     filtered_clients = [client for client in clients if client.cpf == cpf]
     return filtered_clients[0] if filtered_clients else None
 
@@ -203,6 +212,10 @@ def get_client_account(client):
     return client.accounts[0]
 
 
+# Se você instanciar o seu sistema solicitando o cliente que será utilizando
+# não tem porque ter esse cpf sendo informado o tempo inteiro.
+# Pense nos bancos normais, uma vez que você "acessou", você opera na conta selecionada.
+# Ajuste para ficar nesse fluxo.
 def deposit_func(clients):
     cpf = input("Informe o CPF do cliente: ")
     client = filter_client(cpf, clients)
@@ -254,6 +267,8 @@ def show_statement(clients):
     print("\n================ EXTRATO ================")
     transactions = account.history.transactions
 
+    # Vou deixar a melhoria pontual desse bloco (271-276)
+    # para sua criatividade. Mas dá pra ser mais eficiente aqui
     statement = ""
     if not transactions:
         statement = "Não foram realizadas movimentações."
