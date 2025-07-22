@@ -1,7 +1,7 @@
-from Individual import Individual
-from CheckingAccount import CheckingAccount
-from Deposit import Deposit
-from Withdraw import Withdraw
+from individual import Individual
+from checkingAccount import CheckingAccount
+from deposit import Deposit
+from withdraw import Withdraw
 # Version 0.4 - Sistema bancário simples
 # Importando as classes necessárias para o funcionamento do sistema
 # Individual representa o cliente, CheckingAccount representa a conta corrente,
@@ -26,11 +26,11 @@ def filter_client(cpf, clients_dict):
     return clients_dict.get(cpf)
 
 def get_client_account(client):
-    if not client.account:
+    if not client.accounts:
         print("\n !!! Conta não encontrada !!!")
         return None
     
-    if len(client.account) > 1:
+    if len(client.accounts) > 1:
         print("\n Contas disponiveis:")
         for i, account in enumerate(client.accounts):
             print(f"[{i}] Agência: {account.agency} | Conta: {account.number}")
@@ -42,7 +42,7 @@ def get_client_account(client):
             print("\n !!! Opção inválida !!!")
             return None
         
-    return client.account[0]
+    return client.accounts[0]
 
 def deposit_func(clients_dicts):
     cpf = input("Informe o CPF do cliente: ")

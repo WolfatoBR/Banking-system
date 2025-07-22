@@ -1,5 +1,5 @@
-from Transaction import Transaction
-from abc import ABC, abstractproperty
+from transaction import Transaction
+from abc import ABC, abstractmethod
 
 class Deposit(Transaction):
     def __init__(self, value):

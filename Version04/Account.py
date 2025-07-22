@@ -1,5 +1,5 @@
-from abc import classmethod, property
-from History import History
+from abc import ABC, abstractmethod
+from history import History
 
 class Account:
     def __init__(self, number, client):

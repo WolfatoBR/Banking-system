@@ -1,5 +1,5 @@
 from datetime import datetime
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 class History:
     def __init__(self):
