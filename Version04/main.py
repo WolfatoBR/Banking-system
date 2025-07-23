@@ -125,6 +125,8 @@ def list_accounts(accounts):
     for account in accounts:
         print("=" * 100)
         print(textwrap.dedent(str(account)))
+    if not accounts:
+        print("Não existe contas deste usuario!!!")
 
 def main():
     clients_dict = {}  # Agora clientes é um dict
