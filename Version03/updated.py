@@ -9,8 +9,6 @@ import textwrap
 from abc import ABC, abstractclassmethod, abstractproperty
 from datetime import datetime
 
-# Sugestão: Separe cada classe em um arquivo diferente para facilitar manutenção e reuso.
-
 class Client:
     def __init__(self, address):
         self.address = address
@@ -300,10 +298,3 @@ def main():
             print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
 
 main()
-
-# Comentários finais:
-# - O acesso ao cliente ficou O(1) usando dict.
-# - O extrato está mais eficiente e legível.
-# - O contador de saques evita sobrecarga.
-# - Permite escolha de conta se o cliente tiver mais de uma.
-# - Sugestão de separar classes em arquivos para projetos futuros.
