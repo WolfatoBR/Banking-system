@@ -17,3 +17,8 @@ class History:
                 "date": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
             }
         )
+    
+    def generate_report(self, type_transaction=None):
+        for transaction in self._transactions:
+            if type_transaction is None or transaction["type"].lower() == type_transaction.lower():
+                yield transaction
