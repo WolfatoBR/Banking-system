@@ -31,4 +31,5 @@ class CheckingAccount(Account):
             Agência:\t{self.agency}
             C/C:\t\t{self.number}
             Titular:\t{self.client.name}
+            Saldo:\t\t{self.balance}
         """

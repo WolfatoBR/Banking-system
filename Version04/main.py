@@ -7,7 +7,7 @@ from withdraw import Withdraw
 # Individual representa o cliente, CheckingAccount representa a conta corrente,
 # Deposit e Withdraw representam as transações de depósito e saque, respectivamente.
 
-import textwrap
+import textwrap ; from datetime import datetime
 
 def menu():
     menu = """\n
@@ -21,6 +21,13 @@ def menu():
     [q]\tSair
     => """
     return input(textwrap.dedent(menu))
+
+def log_transaction(func):
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        print(f"{datetime.now()}: {func.__name__.upper()}")
+        return result
+    return wrapper
 
 def filter_client(cpf, clients_dict):
     return clients_dict.get(cpf)
@@ -44,6 +51,7 @@ def get_client_account(client):
         
     return client.accounts[0]
 
+@log_transaction
 def deposit_func(clients_dicts):
     cpf = input("Informe o CPF do cliente: ")
     client = filter_client(cpf, clients_dicts)
@@ -60,6 +68,7 @@ def deposit_func(clients_dicts):
         return
     client.perform_transaction(account, transaction)
 
+@log_transaction
 def withdraw_func(clients_dicts):
     cpf = input("Informe o CPF do cliente: ")
     client = filter_client(cpf, clients_dicts)
@@ -76,30 +85,37 @@ def withdraw_func(clients_dicts):
         return
     client.perform_transaction(account, transaction)
 
+@log_transaction
 def show_statement(clients_dict):
     cpf = input("Informe o CPF do cliente: ")
     client = filter_client(cpf, clients_dict)
+
     if not client:
         print("\n@@@ Cliente não encontrado! @@@")
         return
+    
     account = get_client_account(client)
     if not account:
         return
+    
     print("\n================ EXTRATO ================")
-    transactions = account.history.transactions
-    if not transactions:
-        print("Não foram realizadas movimentações.")
-    else:
-        # Extrato mais eficiente usando join
-        statement = "\n".join(
-            f"{t['date']} - {t['type']}: R$ {t['value']:.2f}" for t in transactions
-        )
-        print(statement)
+    statemant = ""
+    have_transactions = False
+    for transaction in account.history.generate_report(type_transaction=None):
+        have_transactions = True
+        statemant += f"\n{transaction['type']}:\n\tR$ {transaction['value']:.2f}\n"
+    
+    if not have_transactions:
+        statemant = "Não foram realizadas transações nesta conta."
+    
+    print(statemant)
     print(f"\nSaldo:\n\tR$ {account.balance:.2f}")
     print("==========================================")
 
+@log_transaction
 def create_client(clients_dict):
     cpf = input("Informe o CPF (somente número): ")
+
     if filter_client(cpf, clients_dict):
         print("\n@@@ Já existe cliente com esse CPF! @@@")
         return
@@ -110,17 +126,22 @@ def create_client(clients_dict):
     clients_dict[cpf] = client
     print("\n=== Cliente criado com sucesso! ===")
 
+@log_transaction
 def create_account(account_number, clients_dict, accounts):
     cpf = input("Informe o CPF do cliente: ")
     client = filter_client(cpf, clients_dict)
+    
     if not client:
         print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
         return
+    
     account = CheckingAccount.new_account(client=client, number=account_number)
     accounts.append(account)
     client.accounts.append(account)
+
     print("\n=== Conta criada com sucesso! ===")
 
+@log_transaction
 def list_accounts(accounts):
     for account in accounts:
         print("=" * 100)
