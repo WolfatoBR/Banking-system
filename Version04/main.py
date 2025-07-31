@@ -2,11 +2,7 @@ from individual import Individual
 from checkingAccount import CheckingAccount
 from deposit import Deposit
 from withdraw import Withdraw
-# Version 0.4 - Sistema bancário simples
-# Importando as classes necessárias para o funcionamento do sistema
-# Individual representa o cliente, CheckingAccount representa a conta corrente,
-# Deposit e Withdraw representam as transações de depósito e saque, respectivamente.
-
+from accountsIteractor import AccountsIteractor
 import textwrap ; from datetime import datetime
 
 def menu():
@@ -22,10 +18,12 @@ def menu():
     => """
     return input(textwrap.dedent(menu))
 
+#decorador
 def log_transaction(func):
     def wrapper(*args, **kwargs):
+        print(f"\n--- {func.__name__.upper()} --- | Início: {datetime.now().strftime("%H:%M:%S")}")
         result = func(*args, **kwargs)
-        print(f"{datetime.now()}: {func.__name__.upper()}")
+        print(f"--- Fim da Operação ---")
         return result
     return wrapper
 
@@ -34,19 +32,27 @@ def filter_client(cpf, clients_dict):
 
 def get_client_account(client):
     if not client.accounts:
-        print("\n !!! Conta não encontrada !!!")
+        print("\n !!! Cliente não possui conta cadastrada. !!!")
         return None
     
     if len(client.accounts) > 1:
-        print("\n Contas disponiveis:")
+        print("\nContas disponíveis:")
         for i, account in enumerate(client.accounts):
-            print(f"[{i}] Agência: {account.agency} | Conta: {account.number}")
+            # mostra as opções começando em 1
+            print(f"    [{i + 1}] Agência: {account.agency} | Conta: {account.number}")
         
         try:
             choice = int(input("Escolha o número da conta: "))
-            return client.accounts[choice]
+            
+            if i<= choice <= len(client.accounts):
+                # subtrai 1 para pegar o indice correto
+                return client.accounts[choice - 1]
+            else:
+                print("\n!!! Opção inválida. Por favor, escolha um dos número listados. !!!")
+                return None
+            
         except (ValueError, IndexError):
-            print("\n !!! Opção inválida !!!")
+            print("\n !!! Opção inválida. Por favor, digite apenas o numero da conta. !!!")
             return None
         
     return client.accounts[0]
@@ -143,8 +149,8 @@ def create_account(account_number, clients_dict, accounts):
 
 @log_transaction
 def list_accounts(accounts):
-    for account in accounts:
-        print("=" * 100)
+    for account in AccountsIteractor(accounts):
+        print("=" * 70)
         print(textwrap.dedent(str(account)))
     if not accounts:
         print("Não existe contas deste usuario!!!")

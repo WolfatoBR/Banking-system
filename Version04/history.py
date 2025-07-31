@@ -18,7 +18,17 @@ class History:
             }
         )
     
+    #gerador
     def generate_report(self, type_transaction=None):
         for transaction in self._transactions:
             if type_transaction is None or transaction["type"].lower() == type_transaction.lower():
+                yield transaction
+    
+    #TODO: filtrar todas as transações realizadas no dia 
+    def day_transactions(self):
+        date_now = datetime.now().date()
+        for transaction in self._transactions:
+            transactions_date = datetime.strptime(transaction["date"], "%d-%m-%Y %H:%M:%S").date()
+
+            if date_now == transactions_date:
                 yield transaction
