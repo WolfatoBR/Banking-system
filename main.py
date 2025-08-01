@@ -5,6 +5,8 @@ from withdraw import Withdraw
 from accountsIteractor import AccountsIteractor
 import textwrap ; from datetime import datetime
 
+LOG_FILE = "log_bancario.txt"
+
 def menu():
     menu = """\n
     ================ MENU ================
@@ -21,9 +23,31 @@ def menu():
 #decorador
 def log_transaction(func):
     def wrapper(*args, **kwargs):
-        print(f"\n--- {func.__name__.upper()} --- | Início: {datetime.now().strftime("%H:%M:%S")}")
+        timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        log_message_start = f"[{timestamp}] - INFO - Iniciando operação: '{func.__name__}'\n"
+
+        # abrir o arquivo em modo de append e escreve o log de inicio
+        try:
+            with open(LOG_FILE, "a", encoding="utf-8") as f:
+                f.write(log_message_start)
+        except IOError as exc:
+            print(f"@@@ Erro ao escrever no arquivo de log: {exc} @@@")
+        
+        print(log_message_start.strip()) # .strip() vai remover a quebra de linha
+
+        # executando func original
         result = func(*args, **kwargs)
-        print(f"--- Fim da Operação ---")
+
+        timestamp_end = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        log_message_end = f"[{timestamp_end}] - INFO - Operação finalizada: '{func.__name__}'\n"
+
+        # escreve o log de finalização
+        try:
+            with open(LOG_FILE, "a", encoding="utf-8") as f:
+                f.write(log_message_end)
+        except IOError as exc:
+            print(f"@@@ Erro ao escrever no arquivo de log: {exc} @@@")
+
         return result
     return wrapper
 
