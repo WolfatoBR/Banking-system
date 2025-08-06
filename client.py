@@ -5,9 +5,11 @@ class Client:
         self.indice_account = 0
 
     def perform_transaction(self, account, transaction):
-        # TODO: validar o número de transações e invalidar a operação se for necessário
-        # print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
-        transaction.register(account)
+        try :
+            print(f"\nIniciando a operação {transaction.__class__.__name__}...")
+            transaction.register(account)
+        except Exception as exc:
+            print(f"Falha critica na transação! Ocorreu um erro inesperado : {exc} @@@")
 
     def add_account(self, account):
         self.accounts.append(account)
