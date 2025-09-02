@@ -107,16 +107,16 @@ class BankingApp(QMainWindow):
             self.log_message("É obrigatorio um Cpf para criar um cliente.")
             return
         
-        name, ok = QInputDialog.getText(self, "Novo Cliente", "Nome Completo:")
-        if not ok or not name.strip() :
+        name, _ = QInputDialog.getText(self, "Novo Cliente", "Nome Completo:")
+        if not name.strip() :
             return
 
-        birth_date, ok2 = QInputDialog.getText(self, "Novo Client", "Data de Nascimento (dd-mm-aaaa):")
-        if not ok2 or not birth_date.strip(): 
+        birth_date, _ = QInputDialog.getText(self, "Novo Client", "Data de Nascimento (dd-mm-aaaa):")
+        if not birth_date.strip(): 
             return
 
-        address, ok3 = QInputDialog.getText(self, "Novo Cliente", "Endereço:")
-        if not ok3 or not address.strip(): 
+        address, _ = QInputDialog.getText(self, "Novo Cliente", "Endereço:")
+        if not address.strip(): 
             return
         
         success = db.add_client(cpf, name, birth_date, address)
