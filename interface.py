@@ -6,12 +6,12 @@ from PyQt6.QtCore import QStringListModel
 from mainwindow_qt import Ui_MainWindow
 
 import database as db
+from sqlite3 import Error as SqliteError
 
 from individual import Individual
 from checkingAccount import CheckingAccount
 from deposit import Deposit
 from withdraw import Withdraw
-from accountsIteractor import AccountsIteractor
 
 LOG_FILE = "log_bancario.txt"
 
@@ -134,83 +134,96 @@ class BankingApp(QMainWindow):
             self.log_message("CPF do titular é obrigatorio para ciração de conta.")
             return
         
-        # a função do BD ja verifica se o cliente existe
-        new_account_number = db.add_account(agency="0001", balance=0, client_cpf= cpf)
+        try:
+            # a função do BD ja verifica se o cliente existe
+            new_account_number = db.add_account(agency="0001", balance=0, client_cpf= cpf)
 
-        if new_account_number:
-            self.log_message(f"Conta número {new_account_number} criada para o cliente de CPF {cpf}.")
-            QMessageBox.information(self, "Sucesso", f"Conta {new_account_number} criada com sucesso.")
-        else:
-            self.log_message(f"Não foi possivel criar a conta. Verifique se o cliente com CPF {cpf} existe.")
-            QMessageBox.warning(self, "Erro", "Não foi possível criar a conta.\nVerifique se o cliente com este CPF já está cadastrado.")
+            if new_account_number:
+                self.log_message(f"Conta número {new_account_number} criada para o cliente de CPF {cpf}.")
+                QMessageBox.information(self, "Sucesso", f"Conta {new_account_number} criada com sucesso.")
+            else:
+                self.log_message(f"Não foi possivel criar a conta. Verifique se o cliente com CPF {cpf} existe.")
+                QMessageBox.warning(self, "Erro", "Não foi possível criar a conta.\nVerifique se o cliente com este CPF já está cadastrado.")
+       
+        except SqliteError as e:
+                self.log_message(f"Erro de banco de dados ao criar conta para o CPF {cpf}: {e}")
+                QMessageBox.critical(self, "Erro não esperado do banco de dados.",
+                                     f"Detalhes : {e}")
+        except Exception as e:
+            self.log_message(f"Erro inesperado ao criar conta para o cpf {cpf}: {e}")
+            QMessageBox.critical(self, "Erro inesperado",
+                                 f"Ocorreu um erro na aplicação.... \n Detalhes: {e}")
     
     def deposit_func(self):
         cpf = self.get_cpf()
         value = self.get_value()
-
-        if value is None or value <=0:
-            self.log_message("Valor do deposito invalido.")
-            QMessageBox.warning(self, "Valor Invalido", "Insira um valor de deposito valido.")
+        if value is None or value <= 0:
+            QMessageBox.warning(self, "Valor Inválido", "Por favor, insira um valor de depósito positivo.")
             return
-        
+
         client, account = self._get_hydrated_objects(cpf)
         if not account:
+            QMessageBox.warning(self, "Operação Falhou", "Cliente não encontrado ou não possui conta.")
             return
-        
+            
         transaction = Deposit(value)
-        client.perform_transaction(account, transaction)
-
-        db.update_account_balance(account.number, account.balance)
-
-        self.log_message(f"Depósito de R$ {value:.2f} realizado na conta {account.number}.")
-        QMessageBox.information(self, "Sucesso", "Deposito realizado com suceesso.")
+        # O perform_transaction ainda é útil para a lógica, mas não para o histórico
+        if client.perform_transaction(account, transaction):
+            db.update_account_balance(account.number, account.balance)
+            db.add_transaction(account.number, "Depósito", value)
+            
+            self.log_message(f"Depósito de R$ {value:.2f} realizado na conta {account.number}.")
+            QMessageBox.information(self, "Sucesso", "Depósito realizado com sucesso!")
+            self.ui.value_input.clear()
     
     def withdraw_func(self):
         cpf = self.get_cpf()
         value = self.get_value()
-
         if value is None or value <= 0:
-            self.log_message("Valor de saque inválido.")
             QMessageBox.warning(self, "Valor Inválido", "Por favor, insira um valor de saque positivo.")
             return
 
         client, account = self._get_hydrated_objects(cpf)
         if not account:
+            QMessageBox.warning(self, "Operação Falhou", "Cliente não encontrado ou não possui conta.")
             return
             
         transaction = Withdraw(value)
-        
-        client.perform_transaction(account, transaction)
-        
-        db.update_account_balance(account.number, account.balance)
+        # A lógica de negócio (verificar saldo, etc.) ainda é executada aqui
+        if client.perform_transaction(account, transaction):
+             db.update_account_balance(account.number, account.balance)
+             db.add_transaction(account.number, "Saque", value)
 
-        # A mensagem de sucesso/falha já é (ou deveria ser) impressa pelos métodos de negócio
-        self.log_message(f"Tentativa de saque de R$ {value:.2f} na conta {account.number}.")
-        QMessageBox.information(self, "Sucesso", f"Saque no valor de R$ ({value:.2f}) realizado com sucesso.")
+             self.log_message(f"Saque de R$ {value:.2f} realizado na conta {account.number}.")
+             QMessageBox.information(self, "Sucesso", "Saque realizado com sucesso!")
+             self.ui.value_input.clear()
+        else:
+            self.log_message(f"Tentativa de saque de R$ {value:.2f} na conta {account.number} falhou.")
+            QMessageBox.warning(self, "Operação Falhou", "Saque não realizado. Verifique o saldo e os limites.")
     
     def show_statement(self):
-        cpf =self.get_cpf()
-        client, account = self._get_hydrated_objects(cpf)
+        cpf = self.get_cpf()
+        _, account = self._get_hydrated_objects(cpf)
         if not account:
+            QMessageBox.warning(self, "Operação Falhou", "Cliente não encontrado ou não possui conta.")
             return
+            
+        self.log_message(f"===== Extrato da Conta: {account.number} =====")
         
-        # FIXME melhoria futura -> salvar o historico de transações no BD
-        self.log_message(f"==== Extrato da Conta: {account.number} ====")
+        #Busca as transações do banco de dados
+        transactions = db.get_transactions_by_account(account.number)
 
-        # Temporariamente, vamos adicionar uma transação "falsa" para popular o histórico
-        # já que ele não está sendo salvo no banco.
-        account.deposit(0) # Isso adiciona o saldo atual ao histórico
-
-        statement_has_transactions = False
-        for transaction in account.history.generate_report():
-            statement_has_transactions = True
-            self.log_message(f"{transaction['date']} - {transaction['type']}: R$ {transaction['value']:.2f}")
-
-        if not statement_has_transactions:
-            self.log_message("Nenhuma transação registrada nesta sessão.")
+        if not transactions:
+            self.log_message("Nenhuma transação encontrada para esta conta.")
+        else:
+            for trans in transactions:
+                self.log_message(
+                    f"{trans['date']} - {trans['transaction_type']}: R$ {trans['value']:.2f}"
+                )
         
-        self.log_message(f"Saldo final: R$ {account.balance:.2f}")
-        self.log_message("=" * 30)
+        # O saldo final vem do objeto já hidratado
+        self.log_message(f"Saldo atual: R$ {account.balance:.2f}")
+        self.log_message("=" * 40)
 
     def list_accounts(self):
         all_clients_data = db.get_all_clients()

@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 class DataBaseManager():
     """Classe pra gerenciar"""
@@ -76,7 +77,7 @@ class DataBaseManager():
         self.execute_query(query, tuple(condition.values()))
         print(f"Registro em '{table_name}' deletado.")
 
-    def select(self, table_name, columns="*", condition=None, fetch_one=False):
+    def select(self, table_name, columns="*", condition=None, fetch_one=False, order_by=None):
         """
         Seleciona dados de uma tabela.
         :param table_name: Nome da tabela.
@@ -90,6 +91,10 @@ class DataBaseManager():
             condition_clause = ' AND '.join([f"{key} = ?" for key in condition.keys()])
             query += f" WHERE {condition_clause}"
             params = tuple(condition.values())
+        
+        # adição feita para o extrato
+        if order_by:
+            query += f" ORDER BY {order_by}"
         
         cursor = self.execute_query(query, params)
 
@@ -120,6 +125,17 @@ def create_project_tables():
             'FOREIGN KEY (client_cpf)' : 'REFERENCES clients (cpf)'
         }
         db.create_table('accounts', account_columns)
+
+        transaction_columns = {
+            'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+            'account_number': 'INTEGER NOT NULL',
+            'transaction_type': 'TEXT NOT NULL',
+            'value': 'REAL NOT NULL',
+            'date': 'TEXT NOT NULL',
+            'FOREIGN KEY (account_number)': 'REFERENCES accounts (number)'
+        }
+        db.create_table('transactions', transaction_columns)
+
     print("Tabelas prontas.")
 
 def add_client(cpf, name, birth_date, address):
@@ -165,6 +181,22 @@ def update_account_balance(account_number, new_balance):
     """Atualiza o saldo de uma conta especifica."""
     with DataBaseManager(DB_PATH) as db:
         return db.update('accounts', {'balance': new_balance}, {'number': account_number})
+
+def add_transaction(account_number, transaction_type, value):
+    """Adiciona um registro de transação no banco de dados"""
+    with DataBaseManager(DB_PATH) as db:
+        date_now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        db.insert('transactions', {
+            'account_number': account_number,
+            'transaction_type': transaction_type,
+            'value': value,
+            'date': date_now
+        })
+
+def get_transactions_by_account(account_number):
+    """Busca todas as transações da conta especifica, ordenado por data"""
+    with DataBaseManager(DB_PATH) as db:
+        return db.select('transactions', condition={'account_number': account_number}, order_by='id ASC')
 
 def delete_client(cpf):
     """Exclui um cliente e todas as suas contas associadas."""

@@ -9,6 +9,4 @@ class Withdraw(Transaction):
         return self._value
 
     def register(self, account):
-        Transaction_sucsess = account.withdraw(self._value)
-        if Transaction_sucsess:
-            account.history.add_transaction(self)
+        return account.withdraw(self._value)
