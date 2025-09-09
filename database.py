@@ -49,8 +49,9 @@ class DataBaseManager():
         columns = ', '.join(data.keys())
         placeholders = ', '.join(['?'] * len(data))
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
-        self.execute_query(query, tuple(data.values()))
+        cursor = self.execute_query(query, tuple(data.values()))
         print(f"Registro inserido em '{table_name}'.")
+        return cursor.lastrowid    ## A propriedade cursor.lastrowid guarda o valor da coluna PRIMARY KEY gerado automaticamente pelo banco na última inserção.
 
     def update(self, table_name, data, condition):
         """
