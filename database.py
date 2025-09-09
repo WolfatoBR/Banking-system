@@ -213,19 +213,3 @@ def delete_account(account_number):
     """Exclui um conta especifica pelo seu numero."""
     with DataBaseManager(DB_PATH) as db:
         db.delete('accounts', {'number': account_number})
-
-#Bloco para iniciar e testar rapido
-# if __name__ == '__main__':
-#     create_project_tables()
-#     print("\nTeste rapido")
-#     print("Cliente de teste inserido com sucesso.")
-#     # Adicionando uma conta para o cliente
-#     acc_id = add_account("0001", 1000.0, "12345678900")
-#     print(f"Conta de teste criada com o número: {acc_id}")
-# else:
-#     print("Cliente de teste já existe.")
-
-# print("\nTeste de leitura:")
-# fulano = get_client_by_cpf("12345678900")
-# if fulano:
-#     print(dict(fulano))
