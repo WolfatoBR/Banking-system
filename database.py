@@ -155,7 +155,7 @@ def add_client(cpf, name, birth_date, address):
             return False
 
 def add_account(agency, balance, client_cpf):
-    """Adiciona uma conta para um cliente exixstente"""
+    """Adiciona uma conta para um cliente existente"""
     with DataBaseManager(DB_PATH) as db:
         #verificação
         client = db.select('clients', condition={'cpf': client_cpf}, fetch_one=True)
