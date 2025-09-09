@@ -73,6 +73,9 @@ class DataBaseManager():
         :param table_name: nome da tabela.
         :param condition: um dicionario pra clausula WHERE, ex: {'id': 1}.
         """
+        if not condition or len(condition) == 0:
+            raise ValueError("Para evitar desastres, é necessario uma condição.") ## raise lança a exceção e interrompe o programa.
+        
         condition_clause = ' AND '.join([f"{key} = ?" for key in condition.keys()])
         query = f"DELETE FROM {table_name} WHERE {condition_clause}"
         self.execute_query(query, tuple(condition.values()))
