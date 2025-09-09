@@ -153,6 +153,8 @@ def add_client(cpf, name, birth_date, address):
         except sqlite3.IntegrityError:
             #Erro se o cpf (primary key) ja estiver em uso
             return False
+        except sqlite3.DatabaseError:
+            return False
 
 def add_account(agency, balance, client_cpf):
     """Adiciona uma conta para um cliente existente"""
