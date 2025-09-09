@@ -18,8 +18,11 @@ class DataBaseManager():
     def __exit__(self, exc_type, exc_val, exc_tb):
         """fecha a conexao ao sair do bloco 'with'."""
         if self.conn:
-            self.conn.commit()
-            self.conn.close()
+            if exc_type is not None:
+                self.conn.rollback() # rollback pra desfazer tudo
+            else:
+                self.conn.commit()
+        self.conn.close()
     
     def execute_query(self, query, params=()):
         """uma query pra uso interno"""
