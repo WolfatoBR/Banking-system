@@ -51,6 +51,8 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName("label_2")
         self.cpf_input = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.cpf_input.setGeometry(QtCore.QRect(40, 170, 250, 31))
+        self.cpf_input.setStyleSheet("color: rgb(255, 255, 255);\n"
+"background-color: rgb(25, 25, 25);")
         self.cpf_input.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.cpf_input.setObjectName("cpf_input")
         self.label_3 = QtWidgets.QLabel(parent=self.centralwidget)
@@ -61,10 +63,14 @@ class Ui_MainWindow(object):
         self.label_3.setObjectName("label_3")
         self.value_input = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.value_input.setGeometry(QtCore.QRect(40, 270, 250, 31))
+        self.value_input.setStyleSheet("color: rgb(255, 255, 255);\n"
+"background-color: rgb(25, 25, 25);")
         self.value_input.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.value_input.setObjectName("value_input")
         self.listView = QtWidgets.QListView(parent=self.centralwidget)
         self.listView.setGeometry(QtCore.QRect(20, 370, 530, 192))
+        self.listView.setStyleSheet("color: rgb(255, 255, 255);\n"
+"background-color: rgb(25, 25, 25);")
         self.listView.setObjectName("listView")
         self.label_4 = QtWidgets.QLabel(parent=self.centralwidget)
         self.label_4.setGeometry(QtCore.QRect(210, 340, 141, 20))
