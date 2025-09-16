@@ -10,6 +10,4 @@ class Deposit(Transaction):
         return self._value
     
     def register(self, account):
-        transaction_success = account.deposit(self._value)
-        if transaction_success:
-            account.history.add_transaction(self)
+        return account.deposit(self._value)

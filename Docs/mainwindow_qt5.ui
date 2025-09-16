@@ -104,6 +104,10 @@ color: rgb(255, 255, 255);</string>
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(25, 25, 25);</string>
+    </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
@@ -138,6 +142,10 @@ color: rgb(255, 255, 255);</string>
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(25, 25, 25);</string>
+    </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
@@ -153,6 +161,10 @@ color: rgb(255, 255, 255);</string>
       <width>530</width>
       <height>192</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(25, 25, 25);</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_4">

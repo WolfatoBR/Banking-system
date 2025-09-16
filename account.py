@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from history import History
 
 class Account:
     def __init__(self, number, client):
@@ -7,7 +6,6 @@ class Account:
         self._number = number
         self._agency = "0001"
         self._client = client
-        self._history = History()
 
     @classmethod
     def new_account(cls, client, number):
@@ -28,10 +26,6 @@ class Account:
     @property
     def client(self):
         return self._client
-
-    @property
-    def history(self):
-        return self._history
 
     def withdraw(self, value):
         balance = self.balance
