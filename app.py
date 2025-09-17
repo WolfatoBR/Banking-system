@@ -3,15 +3,15 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QInputDialog
 from PyQt6.QtCore import QStringListModel
-from mainwindow_qt import Ui_MainWindow
+from engine.mainwindow_qt import Ui_MainWindow
 
-import database as db
 from sqlite3 import Error as SqliteError
 
-from individual import Individual
-from checkingAccount import CheckingAccount
-from deposit import Deposit
-from withdraw import Withdraw
+from engine import database as db
+from engine.individual import Individual
+from engine.checkingAccount import CheckingAccount
+from engine.deposit import Deposit
+from engine.withdraw import Withdraw
 
 LOG_FILE = "log_bancario.txt"
 
