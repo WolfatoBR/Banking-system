@@ -3,15 +3,15 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QInputDialog
 from PyQt6.QtCore import QStringListModel
-from mainwindow_qt import Ui_MainWindow
+from engine.mainwindow_qt import Ui_MainWindow
 
-import database as db
 from sqlite3 import Error as SqliteError
 
-from individual import Individual
-from checkingAccount import CheckingAccount
-from deposit import Deposit
-from withdraw import Withdraw
+from engine import database as db
+from engine.individual import Individual
+from engine.checkingAccount import CheckingAccount
+from engine.deposit import Deposit
+from engine.withdraw import Withdraw
 
 LOG_FILE = "log_bancario.txt"
 
@@ -113,6 +113,23 @@ class BankingApp(QMainWindow):
 
         birth_date, _ = QInputDialog.getText(self, "Novo Client", "Data de Nascimento (dd-mm-aaaa):")
         if not birth_date.strip(): 
+            return
+        
+        try:
+            # converter pra data
+            birth_date_obj = datetime.strptime(birth_date, "%d-%m-%Y").date()
+            today = datetime.now().date()
+            
+            age = today.year - birth_date_obj.year - ((today.month, today.day) < (birth_date_obj.month, birth_date_obj.day))
+
+            if age < 18:
+                self.log_message(f"Tentativa de cadastro de menor de idade (CPF: {cpf}, Idade: {age}).")
+                QMessageBox.warning(self, "Idade Invalida", f"O cliente deve ter no mínimo 18 anos. Idade calculada: {age} anos.")
+                return
+
+        except ValueError:
+            self.log_message("Formato de data invalido.")
+            QMessageBox.warning(self, "Formato invalido", "A data de nascimento deve estar no formato dd-mm-aaaa .")
             return
 
         address, _ = QInputDialog.getText(self, "Novo Cliente", "Endereço:")

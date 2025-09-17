@@ -1,4 +1,4 @@
-from client import Client
+from engine.client import Client
 
 class Individual(Client):
     def __init__(self, name, birth_date, cpf, address):
