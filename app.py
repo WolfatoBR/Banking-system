@@ -120,7 +120,12 @@ class BankingApp(QMainWindow):
             birth_date_obj = datetime.strptime(birth_date, "%d-%m-%Y").date()
             today = datetime.now().date()
             
-            age = today.year - birth_date_obj.year - ((today.month, today.day) < (birth_date_obj.month, birth_date_obj.day))
+            age = today.year - birth_date_obj.year
+
+            birth_pending = (today.day, today.month) < (birth_date_obj.day, birth_date_obj.month)
+
+            if birth_pending:
+                age = age - 1
 
             if age < 18:
                 self.log_message(f"Tentativa de cadastro de menor de idade (CPF: {cpf}, Idade: {age}).")
