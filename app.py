@@ -3,15 +3,15 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QInputDialog
 from PyQt6.QtCore import QStringListModel
-from mainwindow_qt import Ui_MainWindow
+from engine.mainwindow_qt import Ui_MainWindow
 
-import database as db
 from sqlite3 import Error as SqliteError
 
-from individual import Individual
-from checkingAccount import CheckingAccount
-from deposit import Deposit
-from withdraw import Withdraw
+from engine import database as db
+from engine.individual import Individual
+from engine.checkingAccount import CheckingAccount
+from engine.deposit import Deposit
+from engine.withdraw import Withdraw
 
 LOG_FILE = "log_bancario.txt"
 
@@ -114,19 +114,65 @@ class BankingApp(QMainWindow):
         birth_date, _ = QInputDialog.getText(self, "Novo Client", "Data de Nascimento (dd-mm-aaaa):")
         if not birth_date.strip(): 
             return
+        
+        # converção pra data
+        try:
+            birth_date_obj = datetime.strptime(birth_date, "%d-%m-%Y").date()
+
+        except ValueError as e:
+            self.log_message(f"Formato de data invalido: {birth_date}. Erro: {e}")
+            QMessageBox.warning(self, "Formato invalido", "A data de nascimento deve estar no formato dd-mm-aaaa .")
+            return
+        except Exception as e:
+            self.log_message(f"Erro inesperado ao processar data: {e}.")
+            QMessageBox.warning(self, "Erro Inesperado", f"Erro ao processar data.\nDetalhes: {e}")
+            return
+        
+        # obter data atual
+        try:
+            today = datetime.now().date()
+        except Exception as e:
+            self.log_message(f"Erro ao obter data atual: {e}")
+            QMessageBox.warning(self, "Erro de sistema", f"Não foi possivel obter a data atual.\nDetalhes: {e}")
+            return
+        
+        # calculo de idade
+        try:
+            age = today.year - birth_date_obj.year
+            birth_pending = (today.day, today.month) < (birth_date_obj.day, birth_date_obj.month)
+
+            if birth_pending:
+                age = age - 1
+
+            if age < 18:
+                self.log_message(f"Tentativa de cadastro de menor de idade (CPF: {cpf}, Idade: {age}).")
+                QMessageBox.warning(self, "Idade Invalida", f"O cliente deve ter no mínimo 18 anos. Idade calculada: {age} anos.")
+                return
+            
+        except Exception as e:
+            self.log_message(f"Erro ao calcular idade: {e}")
+            QMessageBox.warning(self, "Erro de calculo", f"Não foi possivel calcular a idade.\nDetalhes: {e}")
+            return
 
         address, _ = QInputDialog.getText(self, "Novo Cliente", "Endereço:")
         if not address.strip(): 
             return
-        
-        success = db.add_client(cpf, name, birth_date, address)
+        try:
+            success = db.add_client(cpf, name, birth_date, address)
 
-        if success:
-            self.log_message(f"Cliente {name} (CPF: {cpf}) criado com sucesso!")
-            QMessageBox.information(self, "Sucesso", "Cliente criado com sucesso!")
-        else:
-            self.log_message(f"Erro: Cliente com CPF {cpf} já cadastrado no sistema.")
-            QMessageBox.warning(self, "Erro", "Já existe um cliente com este CPF.")
+            if success:
+                self.log_message(f"Cliente {name} (CPF: {cpf}) criado com sucesso!")
+                QMessageBox.information(self, "Sucesso", "Cliente criado com sucesso!")
+            else:
+                self.log_message(f"Erro: Cliente com CPF {cpf} já cadastrado no sistema.")
+                QMessageBox.warning(self, "Erro", "Já existe um cliente com este CPF.")
+        except SqliteError as e:
+            self.log_message(f"Erro de banco de dados ao criar cliente (CPF: {cpf}): {e}")
+            QMessageBox.warning(self, "Erro de banco de dados", f"Não foi possivel salvar o cliente.\nDetalhes: {e}")
+        except Exception as e:
+            self.log_message(f"Erro inesperado ao criar cliente (CPF: {cpf}): {e}")
+            QMessageBox.warning(self, "Erro inesperado", f"Ocorreu um erro na aplicação.\nDetalhes: {e}")
+            
     
     def create_account(self):
         cpf = self.get_cpf()
