@@ -1,4 +1,4 @@
-import sys
+import sys, re
 from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QInputDialog
@@ -52,8 +52,52 @@ class BankingApp(QMainWindow):
         except IOError as exc:
             print(f"Erro ao escrever no log: {exc}")
     
+    def validate_cpf(self, cpf):
+        """
+        Valida um cpf Brasileiro.
+        
+        args:
+            cpf (str): CPF a ser validado (pode conter pontos e traço)
+            
+        Returns:
+            bool: True se o CPF é valido, False caso não.
+        """
+
+        # Remove caracteres não numéricos
+        cpf_clean = ''.join(filter(str.isdigit, cpf))
+        
+        # Verifica se tem 11 dígitos
+        if len(cpf_clean) != 11:
+            return False
+        
+        # Verifica se os dígitos são todos iguais
+        if cpf_clean == cpf_clean[0] * 11:
+            return False
+        
+        # Calcula o primeiro dígito verificador
+        sum_product = sum(int(a) * b for a, b in zip(cpf_clean[0:9], range(10, 1, -1)))
+        expected_digit_1 = (sum_product * 10 % 11) % 10
+        
+        if int(cpf_clean[9]) != expected_digit_1:
+            return False
+        
+        # Calcula o segundo dígito verificador
+        sum_product_2 = sum(int(a) * b for a, b in zip(cpf_clean[0:10], range(11, 1, -1)))
+        expected_digit_2 = (sum_product_2 * 10 % 11) % 10
+        
+        if int(cpf_clean[10]) != expected_digit_2:
+            return False
+        
+        return True
+
     def get_cpf(self):
-        return self.ui.cpf_input.text().strip()
+        cpf = self.ui.cpf_input.text().strip()
+        if not cpf:
+            return None
+        if not self.validate_cpf(cpf):
+            QMessageBox.warning(self, "CPF invalido", "Porfavor, insira um CPF valido.")
+            return None
+        return cpf
     
     def get_value(self):
 
@@ -139,9 +183,9 @@ class BankingApp(QMainWindow):
         # calculo de idade
         try:
             age = today.year - birth_date_obj.year
-            birth_pending = (today.day, today.month) < (birth_date_obj.day, birth_date_obj.month)
+            birthday_pending = (today.month, today.day) < (birth_date_obj.month, birth_date_obj.day)
 
-            if birth_pending:
+            if birthday_pending:
                 age = age - 1
 
             if age < 18:
