@@ -1,4 +1,4 @@
-import sys, re
+import sys
 from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QInputDialog
