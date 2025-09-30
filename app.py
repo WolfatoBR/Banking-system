@@ -37,7 +37,10 @@ class BankingApp(QMainWindow):
         self.ui.create_client_button.clicked.connect(self.create_client)
         self.ui.create_account_button.clicked.connect(self.create_account)
         self.ui.list_accounts_button.clicked.connect(self.list_accounts)
-
+        
+        # validação em tempo real
+        self.ui.cpf_input.editingFinished.connect(self.validate_cpf_field)
+    
     def log_message(self, txt):
         """Adiciona uma mensagem ao log da UI e ao arquivo de log."""
         timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -52,6 +55,53 @@ class BankingApp(QMainWindow):
         except IOError as exc:
             print(f"Erro ao escrever no log: {exc}")
     
+    def validate_cpf_field(self):
+        """
+        Valida o CPF em tempo real quando o usúario sai do campo.
+        Muda a cor do campo indicando se é valido ou não.
+        """
+        cpf = self.ui.cpf_input.text().strip()
+
+        if not cpf:
+            # sem validação
+            self.reset_cpf_field_style()
+            return
+        
+        if self.validate_cpf(cpf):
+            #se for valido, ira ficar verde
+            self.set_cpf_field_valid()
+            self.log_message(f"CPF {cpf} validado com sucesso.")
+        
+        else:
+            #se for invalido , campo vermelho
+            self.set_cpf_field_invalid()
+            self.log_message(f"CPF {cpf} é invalido!")
+            QMessageBox.warning(self, "CPF invalido",
+                                f"O CPF '{cpf}' não é valido.\nPor favor, verifique e digite novamente."
+                                )
+        
+    def set_cpf_field_valid(self):
+        """Define o estilo do campo CPF como valido (verde)."""
+        self.ui.cpf_input.setStyleSheet("""
+                QLineEdit {
+                            border: 2px solid #4CAF50;
+                            background-color: #E8F5E9;
+                                        }
+                                        """)
+    
+    def set_cpf_field_invalid(self):
+        """Define o estilo do campo CPF como invalido(vermelho)."""
+        self.ui.cpf_input.setStyleSheet("""
+                QLineEdit {
+                            border: 2px solid #F44336;
+                            background-color: #FFEBEE
+                                        }
+                                        """)
+    
+    def reset_cpf_field_style(self):
+        """Reseta o estilo do campo CPF para o padrão"""
+        self.ui.cpf_input.setStyleSheet("")
+
     def validate_cpf(self, cpf):
         """
         Valida um cpf Brasileiro.
