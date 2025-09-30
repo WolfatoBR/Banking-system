@@ -37,7 +37,10 @@ class BankingApp(QMainWindow):
         self.ui.create_client_button.clicked.connect(self.create_client)
         self.ui.create_account_button.clicked.connect(self.create_account)
         self.ui.list_accounts_button.clicked.connect(self.list_accounts)
-
+        
+        # validação em tempo real
+        self.ui.cpf_input.editingFinished.connect(self.validate_cpf_field)
+    
     def log_message(self, txt):
         """Adiciona uma mensagem ao log da UI e ao arquivo de log."""
         timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -52,8 +55,99 @@ class BankingApp(QMainWindow):
         except IOError as exc:
             print(f"Erro ao escrever no log: {exc}")
     
+    def validate_cpf_field(self):
+        """
+        Valida o CPF em tempo real quando o usúario sai do campo.
+        Muda a cor do campo indicando se é valido ou não.
+        """
+        cpf = self.ui.cpf_input.text().strip()
+
+        if not cpf:
+            # sem validação
+            self.reset_cpf_field_style()
+            return
+        
+        if self.validate_cpf(cpf):
+            #se for valido, ira ficar verde
+            self.set_cpf_field_valid()
+            self.log_message(f"CPF {cpf} validado com sucesso.")
+        
+        else:
+            #se for invalido , campo vermelho
+            self.set_cpf_field_invalid()
+            self.log_message(f"CPF {cpf} é invalido!")
+            QMessageBox.warning(self, "CPF invalido",
+                                f"O CPF '{cpf}' não é valido.\nPor favor, verifique e digite novamente."
+                                )
+        
+    def set_cpf_field_valid(self):
+        """Define o estilo do campo CPF como valido (verde)."""
+        self.ui.cpf_input.setStyleSheet("""
+                QLineEdit {
+                            border: 2px solid #4CAF50;
+                            background-color: #E8F5E9;
+                                        }
+                                        """)
+    
+    def set_cpf_field_invalid(self):
+        """Define o estilo do campo CPF como invalido(vermelho)."""
+        self.ui.cpf_input.setStyleSheet("""
+                QLineEdit {
+                            border: 2px solid #F44336;
+                            background-color: #FFEBEE
+                                        }
+                                        """)
+    
+    def reset_cpf_field_style(self):
+        """Reseta o estilo do campo CPF para o padrão"""
+        self.ui.cpf_input.setStyleSheet("")
+
+    def validate_cpf(self, cpf):
+        """
+        Valida um cpf Brasileiro.
+        
+        args:
+            cpf (str): CPF a ser validado (pode conter pontos e traço)
+            
+        Returns:
+            bool: True se o CPF é valido, False caso não.
+        """
+
+        # Remove caracteres não numéricos
+        cpf_clean = ''.join(filter(str.isdigit, cpf))
+        
+        # Verifica se tem 11 dígitos
+        if len(cpf_clean) != 11:
+            return False
+        
+        # Verifica se os dígitos são todos iguais
+        if cpf_clean == cpf_clean[0] * 11:
+            return False
+        
+        # Calcula o primeiro dígito verificador
+        sum_product = sum(int(a) * b for a, b in zip(cpf_clean[0:9], range(10, 1, -1)))
+        expected_digit_1 = (sum_product * 10 % 11) % 10
+        
+        if int(cpf_clean[9]) != expected_digit_1:
+            return False
+        
+        # Calcula o segundo dígito verificador
+        sum_product_2 = sum(int(a) * b for a, b in zip(cpf_clean[0:10], range(11, 1, -1)))
+        expected_digit_2 = (sum_product_2 * 10 % 11) % 10
+        
+        if int(cpf_clean[10]) != expected_digit_2:
+            return False
+        
+        return True
+
     def get_cpf(self):
-        return self.ui.cpf_input.text().strip()
+        cpf = self.ui.cpf_input.text().strip()
+        if not cpf:
+            return None
+        if not self.validate_cpf(cpf):
+            QMessageBox.warning(self, "CPF invalido", "Porfavor, insira um CPF valido.")
+            return None
+        return cpf
     
     def get_value(self):
 
@@ -139,9 +233,9 @@ class BankingApp(QMainWindow):
         # calculo de idade
         try:
             age = today.year - birth_date_obj.year
-            birth_pending = (today.day, today.month) < (birth_date_obj.day, birth_date_obj.month)
+            birthday_pending = (today.month, today.day) < (birth_date_obj.month, birth_date_obj.day)
 
-            if birth_pending:
+            if birthday_pending:
                 age = age - 1
 
             if age < 18:
