@@ -89,6 +89,24 @@ def test_add_account_for_nonexistent_client(setup_test_database):
     # assert: a função deve retornar None, indicando que a operação falhou
     assert result is None
 
+def test_get_all_clients(setup_test_database):
+    """
+    Testa a função get_all_clients para garantir que ela retorna
+    todos os clientes cadastrados no banco de dados.
+    """
+    # Arrange (Organizar): Adiciona dois clientes diferentes.
+    db.add_client("111", "Cliente Um", "01-01-2001", "Endereço 1")
+    db.add_client("222", "Cliente Dois", "02-02-2002", "Endereço 2")
+
+    # Act (Agir): Chama a função a ser testada.
+    all_clients = db.get_all_clients()
+
+    # Assert (Verificar): Confirma se a lista retornada tem o tamanho e o conteúdo corretos.
+    assert len(all_clients) == 2
+    returned_cpfs = {client['cpf'] for client in all_clients}
+    assert "111" in returned_cpfs
+    assert "222" in returned_cpfs
+
 def test_update_account_balance(setup_test_database):
     """
     Teste a atualização do saldo de uma conta.
