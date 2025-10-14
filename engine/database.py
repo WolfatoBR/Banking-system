@@ -215,6 +215,10 @@ def delete_client(cpf):
      db.delete('clients', {'cpf': cpf})
 
 def delete_account(account_number):
-    """Exclui um conta especifica pelo seu numero."""
+    """Exclui uma conta especifica e todas as suas transações associadas."""
     with DataBaseManager(DB_PATH) as db:
+        # deleta todas as transações antes de deletar as contas
+        db.delete('transactions', {'account_number': account_number})
+
+        # deleta todas as contas
         db.delete('accounts', {'number': account_number})
