@@ -104,3 +104,58 @@ def test_update_account_balance(setup_test_database):
     # assert: Busca a conta novamente e verifica se o saldo foi realmente atualizado.
     accounts = db.get_accounts_by_client(client_cpf)
     assert accounts[0]['balance'] == 750.50
+
+def test_add_and_get_transaction(setup_test_database):
+    """Testa se um transação pode ser adiciona e recuperada"""
+    # arrange
+    client_cpf = "11122233344"
+    db.add_client(client_cpf, "Cliente Transação", "01-01-2000", "Endereço")
+    account_number = db.add_account("0001", 1000.0, client_cpf)
+
+    # act
+    db.add_transaction(account_number, "Depósito", 250.0)
+
+    # assert
+    transactions = db.get_transactions_by_account(account_number)
+
+    assert len(transactions) == 1
+    assert transactions[0]['transaction_type'] == "Depósito"
+    assert transactions[0]['value'] == 250.0
+
+def test_delete_account(setup_test_database):
+    """Testa se uma conta e sua transações são deletadas corretamente"""
+    # arrange
+    client_cpf = "11122233344"
+    db.add_client(client_cpf, "Cliente a deletar", "01-01-2000", "Rua")
+    account_number = db.add_account("0001", 100.0, client_cpf)
+    db.add_transaction(account_number, "Depósito", 50.0)
+
+    # act
+    db.delete_account(account_number)
+
+    # assert
+    accounts = db.get_accounts_by_client(client_cpf)
+    transactions = db.get_transactions_by_account(account_number)
+
+    assert len(accounts) == 0, "A conta deveria ter sido deletada."
+    assert len(transactions) == 0, "As transações da conta deveriam ter sido deletadas"
+
+def test_delete_client(setup_test_database):
+    """Testa se um cliente, suas contas e suas transações foram deletadas"""
+    # arrange
+    client_cpf = "33344455566"
+    db.add_client(client_cpf, "Cliente a sumir", "01-01-2001", "Endereço A")
+    acc_num1 = db.add_account("0001", 100.0, client_cpf)
+    acc_num2 = db.add_account("0001", 200.0, client_cpf)
+    db.add_transaction(acc_num1, "Depósito", 10.0)
+    db.add_transaction(acc_num2, "Saque", 20.0)
+
+    # act
+    db.delete_client(client_cpf)
+
+    # assert
+    client_from_db = db.get_client_by_cpf(client_cpf)
+    accounts = db.get_accounts_by_client(client_cpf)
+
+    assert client_from_db is None, "O cliente deveria ter sido deletado."
+    assert len(accounts) == 0, "Todas as contas do cliente deveriam ter sido deletadas"
