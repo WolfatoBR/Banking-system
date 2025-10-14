@@ -159,3 +159,44 @@ def test_delete_client(setup_test_database):
 
     assert client_from_db is None, "O cliente deveria ter sido deletado."
     assert len(accounts) == 0, "Todas as contas do cliente deveriam ter sido deletadas"
+
+def test_databasemanager_delete_sucess(setup_test_database):
+    """Testa se o metodo delete da classe DataBaseMeanager remove um registro."""
+    # arrange
+    client_cpf = "11122233344"
+    db.add_client(client_cpf, "Clinte de registro", "01-01-2002", "Rua A")
+    
+    # pequena verificação: vamos ver se o cliente existe no banco de dados
+    client_before_delete = db.get_client_by_cpf(client_cpf)
+    assert client_before_delete is not None, "Falha no Setup: esse cliente deveria existir"
+
+    #act
+    # usamos o 'with' pra instanciar o DataBaseManager, como as outras funções.
+    with db.DataBaseManager(db.DB_PATH) as manager:
+        manager.delete('clients', {'cpf': client_cpf})
+
+    # assert
+    client_before_delete = db.get_client_by_cpf(client_cpf)
+    assert client_before_delete is None, "O cliente deveria ter sido deletado e não encontrado."
+
+def test_delete_without_condition_raises_error(setup_test_database):
+    """Testa se o metodo delete levanta um ValueError qunado a condição esta vazia ou é nula,
+    conforme a regra de segurança implementada."""
+    # arrange
+    with db.DataBaseManager(db.DB_PATH) as manager:
+        # act & assert
+        # Usamos 'pytest.raises' para verificar se o código dentro do bloco 'with'
+        # levanta a exceção esperada (ValueError). Se levantar, o teste passa.
+        # Se não levantar, ou levantar outra exceção, o teste falha.
+        with pytest.raises(ValueError) as excinfo:
+            manager.delete('clients', {}) # Tenta deletar com um dicionário vazio.
+
+        # (Opcional, mas recomendado) Verificamos se a mensagem de erro contém o texto esperado.
+        # Isso garante que estamos capturando o erro correto pelo motivo correto.
+        assert "necessario uma condição" in str(excinfo.value)
+        
+        # 4. Repetimos o teste para a condição 'None'.
+        with pytest.raises(ValueError) as excinfo_none:
+            manager.delete('clients', None) # Tenta deletar com None.
+        
+        assert "necessario uma condição" in str(excinfo_none.value)
