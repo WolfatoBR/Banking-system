@@ -208,13 +208,25 @@ def get_transactions_by_account(account_number):
         return db.select('transactions', condition={'account_number': account_number}, order_by='id ASC')
 
 def delete_client(cpf):
-    """Exclui um cliente e todas as suas contas associadas."""
+    """Exclui um cliente e todas as suas contas e transações associadas."""
     with DataBaseManager(DB_PATH) as db:
-     # Primeiro deleta as contas, depois o cliente (devido à FOREIGN KEY)   
-     db.delete('accounts', {'client_cpf': cpf})
-     db.delete('clients', {'cpf': cpf})
+        # encontra todas as contas que pertence ao cliente
+        accounts = db.select('accounts',columns='number', condition={'client_cpf': cpf})
+
+        # deleta uma transação a cada conta encontrada
+        for account in accounts:
+            db.delete('transactions', {'account_number': account['number']})
+
+        # deleta todas as contas encontradas
+        db.delete('accounts', {'client_cpf': cpf})
+        # deleta o cliente
+        db.delete('clients', {'cpf': cpf})
 
 def delete_account(account_number):
-    """Exclui um conta especifica pelo seu numero."""
+    """Exclui uma conta especifica e todas as suas transações associadas."""
     with DataBaseManager(DB_PATH) as db:
+        # deleta todas as transações antes de deletar as contas
+        db.delete('transactions', {'account_number': account_number})
+
+        # deleta todas as contas
         db.delete('accounts', {'number': account_number})
