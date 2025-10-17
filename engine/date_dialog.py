@@ -23,14 +23,14 @@ class DateDialog(QDialog):
 
         # melhora a aparencia da font
         font = self.date_edit.font()
-        font.setPointSize(12)
+        font.setPointSize(15)
         self.date_edit.setFont(font)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
 
         # conexao dos sinais
-        self.buttonBox.accepted.connect(self.accepted)
-        self.buttonBox.rejected.connect(self.rejected)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
 
         # adicionando os widgets ao layout
         self.layout.addWidget(self.date_edit)
