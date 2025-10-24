@@ -230,7 +230,7 @@ class BankingApp(QMainWindow):
         
         birth_date_str = birth_date.strftime("%d-%m-%Y")
 
-        if db.add_client(cpf, name, birth_date, address):
+        if db.add_client(cpf, name, birth_date_str, address):
             self.log_message(f"Cliente {name} (CPF: {cpf}) criado com sucesso.")
             QMessageBox.information(self, "Sucesso", "Cliente criado com sucesso.")
             self.ui.cpf_input.clear()
