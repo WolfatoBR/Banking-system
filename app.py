@@ -31,6 +31,10 @@ class BankingApp(QMainWindow):
         self.log_model = QStringListModel(self.log_messages)
         self.ui.listView.setModel(self.log_model)
 
+        # variaveis para guardar a sessão atual
+        self.current_client = None
+        self.current_account = None
+
     def connect_signals(self):    
         self.ui.deposit_button.clicked.connect(self.deposit_func)
         self.ui.withdrawn_button.clicked.connect(self.withdraw_func)
