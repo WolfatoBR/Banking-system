@@ -41,7 +41,7 @@ class BankingApp(QMainWindow):
         self.ui.statement_button.clicked.connect(self.show_statement)
         self.ui.create_client_button.clicked.connect(self.create_client)
         self.ui.create_account_button.clicked.connect(self.create_account)
-        self.ui.list_accounts_button.clicked.connect(self.list_accounts)
+        self.ui.list_accounts_button.clicked.connect(self.select_active_account_and_client)
         
         # validação em tempo real
         self.ui.cpf_input.editingFinished.connect(self.validate_cpf_field)
@@ -300,29 +300,68 @@ class BankingApp(QMainWindow):
         self.log_message(f"Saldo atual: R$ {account.balance:.2f}")
         self.log_message("=" * 40)
 
-    def list_accounts(self):
-        all_clients_data = db.get_all_clients()
-        if not all_clients_data:
-            self.log_message("Nenhum cliente encontrado no sistema.")
+    def select_active_account_and_client(self):
+        """
+        Carrega o cliente com base no CPF e permite o usuario selecionar
+        qual conta ele quer deixar ativa."""
+        cpf = self.get_cpf()
+        if not cpf:
+            QMessageBox.warning(self, "Entrada Invalida", "Digite um CPF para carregar um cliente.")
             return
         
-        self.log_message("===== Lista de contas Cadastradas =====")
-        accounts_found = False
-        for client_data in all_clients_data:
-            accounts_for_client = db.get_accounts_by_client(client_data['cpf'])
-            for account_data in accounts_for_client:
-                accounts_found = True
-                self.log_message(
-                    f"Ag: {account_data['agency']}"
-                    f"Conta: {account_data['number']} | "
-                    f"Titular: {client_data['name']} | "
-                    f"Saldo: R$ {account_data['balance']:.2f}"
-                )
+        # buscando os dados do cliente
+        client_data = db.get_client_by_cpf(cpf)
+        if not client_data:
+            self.log_message(f"Cliente com CPF {cpf} não encontrado!")
+            self.current_account = None
+            self.current_client = None
+            QMessageBox.warning(self,"Erro", "Cliente não encontrado.")
+            return
         
-        if not accounts_found:
-            self.log_message("Nenhuma conta encontrada no sistema.")
+        # "hidrata" o objeto do cliente
+        client_obj = Individual(name=client_data['name'], birth_date=client_data['birth_date'], cpf=client_data['cpf'], address=client_data['address'])
+        self.current_client = client_obj # aqui definimos o client ativo
 
-        self.log_message("=" * 40)
+        # buscamos todas as contas do cliente
+        accounts_data = db.get_accounts_by_client(cpf)
+
+        if not accounts_data:
+            self.log_message(f"Cliente {client_obj.name} encontrado, mas não possi conta.")
+            self.current_account = None
+            QMessageBox.warning(self,"Cliente sem conta", "Esse cliente foi encontrado mas, não possui conta bancaria.")
+            return
+        
+        # hidrata TODAS as contas e adiciona ao objeto cliente
+        hydrated_accounts = []
+        for acc_data in accounts_data:
+            account_obj = CheckingAccount(number=acc_data['number'], client=client_obj, limit=acc_data['limit_value'], withdrawn_limit=acc_data['withdrawn_limit'])
+            account_obj._balance = acc_data['balance']
+            client_obj.add_account(account_obj)
+            hydrated_accounts.append(account_obj)
+        
+        # cheagamos na logica
+        selected_account = None
+        if len(hydrated_accounts) == 1:
+            selected_account = hydrated_accounts[0]
+            self.log_message(f"Cliente {client_obj.name} carregado. Conta única {selected_account.number} selecionada.")
+        else:
+            # criando uma lista de String pra seleção
+            account_options = [f"Conta: {acc.number} (Saldo: R$ {acc.balance:.2f})" for acc in hydrated_accounts]
+
+            item, ok = QInputDialog.getItem(self, "Selecionar Conta",
+                                           f"Cliente {client_obj.name} possui multiplas contas.\nSelecione a conta para operar.",account_options, 0, False)
+            
+            if ok and item:
+                selected_index = account_options.index(item)
+                selected_account = hydrated_accounts[selected_index]
+            else:
+                self.log_message("Seleção cancelada pelo usuario.")
+                self.current_client = None
+                self.current_account = None
+                return
+        self.current_account = selected_account
+        self.log_message(f"CONTA ATIVA TROCADA: Conta {self.selected_account.number} (Tituar: {self.current_client.name})")
+        QMessageBox.information(self, "Sucesso", f"Cliente {self.current_client.name} e conta {self.current_account.number} estão ativos.")
 
 
 if __name__ == "__main__":
