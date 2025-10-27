@@ -161,45 +161,6 @@ class BankingApp(QMainWindow):
         except ValueError:
             return None
     
-    def _get_hydrated_objects(self, cpf):
-        """
-        Busca dados no BD e os "hidrata", criando instancias das classes
-        Individual e CheckingAccount para que possamos usar a lógica de négocio.
-        vai retornar (client_obj, account_obj) ou (None, None).
-        """
-        client_data = db.get_client_by_cpf(cpf)
-        if not client_data:
-            self.log_message(f"Cliente com CPF {cpf} não encontrado!")
-            return None, None
-        
-        client_obj = Individual(
-            name= client_data['name'],
-            birth_date= client_data['birth_date'],
-            cpf= client_data['cpf'],
-            address= client_data['address']
-        )
-
-        # busca a primeira conta do client
-        accounts_data = db.get_accounts_by_client(cpf)
-        if not accounts_data:
-            self.log_message(f"Este cliente não possui uma conta cadastrada!")
-            return client_obj, None
-        
-        # usa a primeira conta encontradsa
-        account_data = accounts_data[0]
-
-        account_obj = CheckingAccount(
-            number= account_data['number'],
-            client= client_obj,
-            limit= account_data['limit_value'],
-            withdrawn_limit= account_data['withdraw_limit']
-        )
-        #FIXME deixar definido o saldo do objeto com o valor que esta no BD
-        account_obj._balance = account_data['balance']
-
-        client_obj.add_account(account_obj)
-        return client_obj, account_obj
-    
     def create_client(self):
         cpf = self.get_cpf()
         if not cpf:
