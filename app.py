@@ -243,11 +243,13 @@ class BankingApp(QMainWindow):
                 selected_index = account_options.index(item)
                 selected_account = hydrated_accounts[selected_index]
             else:
+
+                # atualização feita pra manter a sessão
                 self.log_message("Seleção cancelada pelo usuario.")
-                self.current_client = None
-                self.current_account = None
                 return
                 
+        # aqui atualizamos o estado do cliente
+        self.current_client = client_obj
         self.current_account = selected_account
         
         self.log_message(f"CONTA ATIVA TROCADA: Conta {self.current_account.number} (Tituar: {self.current_client.name})")
