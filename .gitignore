@@ -7,3 +7,4 @@ Version04
 engine\__pycache__
 tests\__pycache__
 tests\.coverage
+banking.db
